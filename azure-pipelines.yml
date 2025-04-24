@@ -13,7 +13,7 @@ steps:
 
 # Step 1: Download the scan report using the JAR
 - script: |
-    java -jar VeracodeJavaAPI.jar -vid 'xxxxxx' -vkey 'xxxxxx' -action detailedreport -buildid $valuebuildid -outputfilepath veracoderesults.txt
+    java -jar VeracodeJavaAPI.jar -vid "$VERACODE_API_ID" -vkey "$VERACODE_API_KEY" -action detailedreport -buildid "47382993" -outputfilepath veracoderesults.txt
     echo 'Veracode Scan Output'
     echo '-----------------------------------------'
     echo `cat veracoderesults.txt`
