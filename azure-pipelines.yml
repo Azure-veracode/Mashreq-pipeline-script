@@ -8,7 +8,7 @@ steps:
 # Step 0: Download the Veracode Java API Wrapper JAR
 - script: |
     echo "Downloading Veracode Java API Wrapper..."
-    curl -L -o vosp-api-wrappers-java.jar https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/22.1.9.3/vosp-api-wrappers-java-22.1.9.3.jar
+    curl -L -o VeracodeJavaAPI.jar https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrappers-java/22.1.9.3/vosp-api-wrappers-java-22.1.9.3.jar
   displayName: 'Download Veracode Java API JAR'
 
 # Step 1: Download the scan report using the JAR
