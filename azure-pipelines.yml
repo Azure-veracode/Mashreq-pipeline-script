@@ -1,0 +1,96 @@
+trigger:
+- main  # or your target branch
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+# Step 0: Download the Veracode Java API Wrapper JAR
+- script: |
+    echo "Downloading Veracode Java API Wrapper..."
+    curl -L -o VeracodeJavaAPI.jar https://repo1.maven.org/maven2/com/veracode/vosp/api/wrappers/vosp-api-wrapper-java/23.3.4.6/vosp-api-wrapper-java-23.3.4.6.jar
+  displayName: 'Download Veracode Java API JAR'
+
+# Step 1: Download the scan report using the JAR
+- script: |
+    java -jar VeracodeJavaAPI.jar -vid 'xxxxxx' -vkey 'xxxxxx' -action detailedreport -buildid $valuebuildid -outputfilepath veracoderesults.txt
+    echo 'Veracode Scan Output'
+    echo '-----------------------------------------'
+    echo `cat veracoderesults.txt`
+    echo '-----------------------------------------'
+    echo 'Veracode Scan result'
+    echo '-----------------------------------------'
+
+    EXCEPTIONS="
+    "
+    echo '----- Checking Flaws -----'
+    numflawssev0=$(cat veracoderesults.txt | grep -oP 'numflawssev0="\K[0-9]+')
+    numflawssev1=$(cat veracoderesults.txt | grep -oP 'numflawssev1="\K[0-9]+')
+    numflawssev2=$(cat veracoderesults.txt | grep -oP 'numflawssev2="\K[0-9]+')
+
+    if [[ "$numflawssev0" -ne 0 ]] || [[ "$numflawssev1" -ne 0 ]] || [[ "$numflawssev2" -ne 0 ]]; then
+        echo "Very High: $numflawssev0"
+        echo "High: $numflawssev1"
+        echo "Medium: $numflawssev2"
+    fi
+
+    echo '----- Checking SCA vulnerabilities -----'
+    VH=0
+    H=0
+    M=0
+
+    for id in `grep 'severity_desc="Very High"' veracoderesults.txt | grep -v detailedreport | awk  -F '["]' '/cve_id=/{print $2}'`
+    do
+            if [[ $EXCEPTIONS == *"$id"* ]]
+            then
+                    echo "Very High: $id is in exception list"
+            else
+                    echo "Very High: $id is NOT in exception list"
+                    VH=$(( VH + 1 ))
+            fi
+    done
+
+    for id in `grep 'severity_desc="High"' veracoderesults.txt | grep -v detailedreport | awk  -F '["]' '/cve_id=/{print $2}'`
+    do
+            if [[ $EXCEPTIONS == *"$id"* ]]
+            then
+                    echo "High: $id is in exception list"
+            else
+                    echo "High: $id is NOT in exception list"
+                    H=$(( H + 1 ))
+            fi
+    done
+
+    for id in `grep 'severity_desc="Medium"' veracoderesults.txt | grep -v detailedreport | awk  -F '["]' '/cve_id=/{print $2}'`
+    do
+            if [[ $EXCEPTIONS == *"$id"* ]]
+            then
+                    echo "Medium: $id is in exception list"
+            else
+                    echo "Medium: $id is NOT in exception list"
+                    M=$(( M + 1 ))
+            fi
+    done
+
+    echo "Very High: $VH "
+    echo "High: $H "
+    echo "Medium: $M "
+
+    if [[ $VH -gt 0 || $H -gt 0 || $M -gt 0 || "$numflawssev0" -ne 0 || "$numflawssev1" -ne 0 || "$numflawssev2" -ne 0 ]] 
+    then
+        echo "Scan Policy: FAILED"
+        exit 1
+    else
+        echo "Scan Policy: PASSED"
+    fi
+  displayName: 'Download and Check Veracode Scan Report'
+
+# Step 2: Run the bash script and pass Veracode credentials as env vars
+- script: |
+    sed -i 's/\r$//' veracode-check.sh
+    bash veracode-check.sh
+  displayName: 'Run Veracode Scan Check'
+  env:
+    VERACODE_API_ID: $(VERACODE_API_ID)
+    VERACODE_API_KEY: $(VERACODE_API_KEY)
+    VERACODE_BUILD_ID: '47382993'
