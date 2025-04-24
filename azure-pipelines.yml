@@ -84,13 +84,3 @@ steps:
         echo "Scan Policy: PASSED"
     fi
   displayName: 'Download and Check Veracode Scan Report'
-
-# Step 2: Run the bash script and pass Veracode credentials as env vars
-- script: |
-    sed -i 's/\r$//' veracode-check.sh
-    bash veracode-check.sh
-  displayName: 'Run Veracode Scan Check'
-  env:
-    VERACODE_API_ID: $(VERACODE_API_ID)
-    VERACODE_API_KEY: $(VERACODE_API_KEY)
-    VERACODE_BUILD_ID: '47382993'
