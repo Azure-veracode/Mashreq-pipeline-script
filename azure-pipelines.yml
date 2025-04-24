@@ -16,7 +16,7 @@ steps:
     java -jar VeracodeJavaAPI.jar -vid $VERACODE_API_ID -vkey $VERACODE_API_KEY -action detailedreport -buildid "47382993" -outputfilepath veracoderesults.txt
     echo 'Veracode Scan Output'
     echo '-----------------------------------------'
-    echo `cat veracoderesults.txt`
+    cat veracoderesults.txt
     echo '-----------------------------------------'
     echo 'Veracode Scan result'
     echo '-----------------------------------------'
@@ -39,48 +39,47 @@ steps:
     H=0
     M=0
 
-    for id in `grep 'severity_desc="Very High"' veracoderesults.txt | grep -v detailedreport | awk  -F '["]' '/cve_id=/{print $2}'`
+    for id in $(grep 'severity_desc="Very High"' veracoderesults.txt | grep -v detailedreport | awk -F '["]' '/cve_id=/{print $2}')
     do
-            if [[ $EXCEPTIONS == *"$id"* ]]
-            then
-                    echo "Very High: $id is in exception list"
-            else
-                    echo "Very High: $id is NOT in exception list"
-                    VH=$(( VH + 1 ))
-            fi
+        if [[ $EXCEPTIONS == *"$id"* ]]; then
+            echo "Very High: $id is in exception list"
+        else
+            echo "Very High: $id is NOT in exception list"
+            VH=$(( VH + 1 ))
+        fi
     done
 
-    for id in `grep 'severity_desc="High"' veracoderesults.txt | grep -v detailedreport | awk  -F '["]' '/cve_id=/{print $2}'`
+    for id in $(grep 'severity_desc="High"' veracoderesults.txt | grep -v detailedreport | awk -F '["]' '/cve_id=/{print $2}')
     do
-            if [[ $EXCEPTIONS == *"$id"* ]]
-            then
-                    echo "High: $id is in exception list"
-            else
-                    echo "High: $id is NOT in exception list"
-                    H=$(( H + 1 ))
-            fi
+        if [[ $EXCEPTIONS == *"$id"* ]]; then
+            echo "High: $id is in exception list"
+        else
+            echo "High: $id is NOT in exception list"
+            H=$(( H + 1 ))
+        fi
     done
 
-    for id in `grep 'severity_desc="Medium"' veracoderesults.txt | grep -v detailedreport | awk  -F '["]' '/cve_id=/{print $2}'`
+    for id in $(grep 'severity_desc="Medium"' veracoderesults.txt | grep -v detailedreport | awk -F '["]' '/cve_id=/{print $2}')
     do
-            if [[ $EXCEPTIONS == *"$id"* ]]
-            then
-                    echo "Medium: $id is in exception list"
-            else
-                    echo "Medium: $id is NOT in exception list"
-                    M=$(( M + 1 ))
-            fi
+        if [[ $EXCEPTIONS == *"$id"* ]]; then
+            echo "Medium: $id is in exception list"
+        else
+            echo "Medium: $id is NOT in exception list"
+            M=$(( M + 1 ))
+        fi
     done
 
-    echo "Very High: $VH "
-    echo "High: $H "
-    echo "Medium: $M "
+    echo "Very High: $VH"
+    echo "High: $H"
+    echo "Medium: $M"
 
-    if [[ $VH -gt 0 || $H -gt 0 || $M -gt 0 || "$numflawssev0" -ne 0 || "$numflawssev1" -ne 0 || "$numflawssev2" -ne 0 ]] 
-    then
+    if [[ $VH -gt 0 || $H -gt 0 || $M -gt 0 || "$numflawssev0" -ne 0 || "$numflawssev1" -ne 0 || "$numflawssev2" -ne 0 ]]; then
         echo "Scan Policy: FAILED"
         exit 1
     else
         echo "Scan Policy: PASSED"
     fi
   displayName: 'Download and Check Veracode Scan Report'
+  env:
+    VERACODE_API_ID: $(VERACODE_API_ID)
+    VERACODE_API_KEY: $(VERACODE_API_KEY)
